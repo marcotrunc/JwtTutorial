@@ -1,10 +1,9 @@
+global using JwtTutorial.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.Filters;
-using Microsoft.AspNetCore.Identity;
 using System.Text;
 using JwtTutorial.Services.UserService;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
-
+//Add DbContext for EntityFramework
+builder.Services.AddDbContext<DataContext>(options =>
+{
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 //Register UserService (dependecy injection)
 builder.Services.AddScoped<IUserService,UserService>();
 //Active HttpContextAccessor
