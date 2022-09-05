@@ -55,7 +55,53 @@ namespace JwtTutorial.Controllers
                 return BadRequest("User Not Found");
             if(!VerifyPasswordHash(req.Password, user.PasswordHash, user.PasswordSalt))
                 return BadRequest("Wrong password.");
+
+            //refreshToken
+            var refreshToken = GenerateRefreshToken();
+            SetRefreshToken(refreshToken);
             return Ok(CreateToken(user));
+        }
+
+        private RefreshToken GenerateRefreshToken()
+        {
+            var refreshToken = new RefreshToken()
+            {
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+                Created = DateTime.Now,
+                Expires = DateTime.Now.AddDays(1),
+            };
+            return refreshToken;
+        }
+
+        private void SetRefreshToken(RefreshToken newRefreshToken)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = newRefreshToken.Expires
+
+            };
+            Response.Cookies.Append("refreshToken", newRefreshToken.Token, cookieOptions);
+            //setting user's property
+            user.RefreshToken = newRefreshToken.Token;
+            user.TokenCreated = newRefreshToken.Created;
+            user.TokenExpires = newRefreshToken.Expires;
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<string>> RefreshToken()
+        {
+            var refreshToken = Request.Cookies["refreshToken"];
+            //if we had a DB, here we would have to search inside to see which user owns this cookie 
+            if(!user.RefreshToken.Equals(refreshToken))
+                return Unauthorized("Invalid Refresh Token");
+            else if (user.TokenExpires < DateTime.Now)
+                return Unauthorized("Token Expired");
+
+            string token = CreateToken(user);
+            var newRefreshToken= GenerateRefreshToken();
+            SetRefreshToken(newRefreshToken);
+            return Ok(token);
         }
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
         {
