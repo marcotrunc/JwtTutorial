@@ -3,5 +3,7 @@
     public interface IUserService
     {
         public string GetMyName();
+        public string GetHttpContext();
+        public string GetEmployee();
     }
 }
