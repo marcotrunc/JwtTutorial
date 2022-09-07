@@ -12,5 +12,6 @@ namespace JwtTutorial.Data
         public DbSet<SuperHero> SuperHeroes { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Character> Characters { get; set; }
+        public DbSet<Weapon> Weapons { get; set; }
     }
 }
